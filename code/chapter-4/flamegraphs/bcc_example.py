@@ -1,6 +1,9 @@
+#!/usr/bin/python3
 from bcc import BPF, PerfType, PerfSWConfig
 import sys
 import errno
+from time import sleep
+import signal
 
 bpf_source = """
 #include <uapi/linux/ptrace.h>
@@ -9,7 +12,7 @@ bpf_source = """
 
 struct trace_t {
   int stack_id;
-}
+};
 
 BPF_HASH(cache, struct trace_t);
 BPF_STACK_TRACE(traces, 10000);
@@ -29,14 +32,17 @@ int collect_stack_traces(struct bpf_perf_event_data *ctx) {
   return 0;
 }
 """
-
-program_pid = int(sys.argv[0])
+print(sys.argv[1])
+program_pid = sys.argv[1]
 bpf_source = bpf_source.replace('PROGRAM_PID', program_pid)
 
+print(bpf_source)
 bpf = BPF(text = bpf_source)
 bpf.attach_perf_event(ev_type = PerfType.SOFTWARE,
                       ev_config = PerfSWConfig.CPU_CLOCK,
-                      fn_name = 'collect_stack_traces')
+                      fn_name = 'collect_stack_traces',
+                      sample_period = 0,
+                      sample_freq = 99)
 
 try:
   sleep(99999999)
@@ -45,11 +51,11 @@ except KeyboardInterrupt:
 
 for trace, acc in sorted(cache.items(), key=lambda cache: cache[1].value):
   line = []
-  if trace.stack_id < 0 and trace.stack_id == -errno.EFAULT
+  if trace.stack_id < 0 and trace.stack_id == -errno.EFAULT:
     line = ['Unknown stack']
-  else
+  else:
     stack_trace = list(traces.walk(trace.stack_id))
-    for stack_address in reversed(stack_trace)
+    for stack_address in reversed(stack_trace):
       line.extend(bpf.sym(stack_address, program_pid))
   
   frame = b";".join(line).decode('utf-8', 'replace')
