@@ -1,6 +1,6 @@
 CLANG = clang
 
-EXECABLE = monitor-exec
+EXECABLE = bpfload
 
 BPFCODE = bpf_program
 
@@ -25,8 +25,7 @@ build: ${BPFCODE.c} ${BPFLOADER}
 	$(CLANG) -O2 -target bpf -c $(BPFCODE:=.c) $(CCINCLUDE) -o ${BPFCODE:=.o}
 
 bpfload: build
-	clang -o $(EXECABLE) -lelf $(LOADINCLUDE) $(LIBRARY_PATH) $(BPFSO) \
-        $(BPFLOADER) loader.c
+	clang -o $(EXECABLE) -lelf $(LOADINCLUDE) $(LIBRARY_PATH) $(BPFSO) $(BPFLOADER) loader.c
 
 $(EXECABLE): bpfload
 
