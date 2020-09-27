@@ -11,4 +11,9 @@ int bpf_prog(void *ctx) {
   return 0;
 }
 
+SEC("socket")
+int socket_prog(struct __sk_buff *skb) {
+  return 0;
+}
+
 char _license[] SEC("license") = "GPL";
