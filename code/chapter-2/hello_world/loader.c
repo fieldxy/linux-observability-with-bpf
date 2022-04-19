@@ -1,3 +1,4 @@
+#include "trace_helpers.h"
 #include "bpf_load.h"
 #include <stdio.h>
 
